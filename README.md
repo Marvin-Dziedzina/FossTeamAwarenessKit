@@ -1,6 +1,6 @@
 # FOSS Team Awareness Kit
 
-This is an application that helps you and your team coordinate your operations and plans.
+This application helps you and your team coordinate your operations and plans.
 
 ## Features until 1.0
 
