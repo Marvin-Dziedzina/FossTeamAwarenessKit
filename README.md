@@ -4,4 +4,4 @@ This application helps you and your team coordinate your operations and plans.
 
 ## Requirements
 
-The requirements are in the respective folders.
+The requirements for each part of this software are in the respective folders.
