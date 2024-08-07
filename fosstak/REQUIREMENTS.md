@@ -6,7 +6,7 @@
 
 ## General Requirements
 
-The application is completely open source. The application will make planning and the execution of operations in the real world easier. The application can be connected to a server that can be hosted by yourself. The application will syncronise your added markings, your position and movement direction to the server.
+The application is completely open source. The application will make planning and the execution of operations in the real world easier. The application can be connected to a server that can be hosted by yourself. The application will synchronise your added markings, your position and movement direction to the server. The application wont rely on online services like a map api, everything that is static will be downloadable.
 
 ## Audience
 
@@ -20,19 +20,20 @@ FOSSTAK is a open source map tool to coordinate operations and let your team kno
 
 ## Scope
 
-* Map from OpenStreetMap
+* The application will use OpenStreetMaps as its map provider.
 
-   Maps can be downloaded
+* The application will provide tools for drawing Lines, Curves and several shapes on the Map.
 
-  * [Nato Markers](https://en.wikipedia.org/wiki/NATO_Joint_Military_Symbology)
-  * Lines
-  * Picture attachments
-    * Map properties within pictures
+* The application will provide [Nato Markers](https://en.wikipedia.org/wiki/NATO_Joint_Military_Symbology) to place on to the map.
+
+* The application will provide the functionality to take or upload pictures and position them on to the map. The facing direction will be shown and saved. The pictures will have the same functionality as the base map so you can upload maps and house plans.
+
+* The application will have two modes: the planner mode and the mission mode.
 
 #### Planner Mode
 
-* Position not shared
+* The planner mode wont share your position. It will only synchronise changes made to the map.
 
 #### Mission Mode
 
-* Shared Position
+* The mission mode will share your position and synchronise changes made to the map.
