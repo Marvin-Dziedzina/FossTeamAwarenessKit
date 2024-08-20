@@ -56,6 +56,8 @@ mod tests {
         // Decrypt
         let out = aes.decrypt(ciphertext).unwrap();
 
-        assert_eq!(data.to_vec(), out);
+        assert_eq!(data.to_vec(), out.data);
+
+        assert_eq!(aad.to_vec(), out.aad);
     }
 }

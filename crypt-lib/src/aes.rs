@@ -6,8 +6,10 @@ use openssl::{
 
 use crate::CryptError;
 
+mod aes_decrypt;
 mod encrypted;
 
+pub use aes_decrypt::AesDecrypted;
 pub use encrypted::AesCiphertext;
 
 pub struct AES {
@@ -15,7 +17,7 @@ pub struct AES {
     cipher: Cipher,
 }
 impl AES {
-    /// Create new `AES` instance
+    /// Create new `AES` instance.
     pub fn new() -> Result<Self, CryptError> {
         // Generate `AES` key
         let key = Self::generate_key_32bytes()?;
@@ -25,8 +27,9 @@ impl AES {
         Ok(Self { key, cipher })
     }
 
-    /// Encrypt data
-    /// aad is additional data that is not encrypted but is protected against tampering.
+    /// Encrypt data.
+    /// `aad` is additional data that is not encrypted but is protected against tampering.
+    /// `aad` has no size limit.
     pub fn encrypt(&self, data: &[u8], aad: Vec<u8>) -> Result<AesCiphertext, CryptError> {
         let iv = Self::generate_iv_16bytes()?;
         let mut tag = [0; 16];
@@ -38,16 +41,18 @@ impl AES {
         Ok(AesCiphertext::new(ciphertext, iv, aad, tag))
     }
 
-    /// Decript data
-    pub fn decrypt(&self, ciphertext: AesCiphertext) -> Result<Vec<u8>, CryptError> {
+    /// Decript data.
+    pub fn decrypt(&self, ciphertext: AesCiphertext) -> Result<AesDecrypted, CryptError> {
         let (ciphertext, iv, aad, tag) = ciphertext.get_components();
 
         // Decrypt
-        decrypt_aead(self.cipher, &self.key, Some(&iv), &aad, &ciphertext, &tag)
-            .map_err(|e| CryptError::AesError(e))
+        let data = decrypt_aead(self.cipher, &self.key, Some(&iv), &aad, &ciphertext, &tag)
+            .map_err(|e| CryptError::AesError(e))?;
+
+        Ok(AesDecrypted::new(data, aad))
     }
 
-    /// Generate a 32 byte random key
+    /// Generate a 32 byte random key.
     fn generate_key_32bytes() -> Result<[u8; 32], CryptError> {
         let mut key = [0; 32];
         rand_bytes(&mut key).map_err(|e| CryptError::Rand(e))?;
@@ -55,7 +60,7 @@ impl AES {
         Ok(key)
     }
 
-    /// Generate a 16 byte random iv
+    /// Generate a 16 byte random iv.
     fn generate_iv_16bytes() -> Result<[u8; 16], CryptError> {
         let mut key: [u8; 16] = [0; 16];
         rand_bytes(&mut key).map_err(|e| CryptError::Rand(e))?;
