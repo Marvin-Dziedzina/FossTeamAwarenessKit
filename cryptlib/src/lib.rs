@@ -1,13 +1,15 @@
-mod aes;
+pub mod aes;
 mod error;
-mod rsa;
+pub mod key;
+pub mod rsa;
 
-pub use aes::AES;
 pub use error::CryptError;
-pub use rsa::RSA;
 
 #[cfg(test)]
 mod tests {
+
+    use aes::AES;
+    use rsa::RSA;
 
     use super::*;
 

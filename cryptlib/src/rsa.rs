@@ -7,12 +7,13 @@ use openssl::{
 };
 
 mod encrypted;
-mod public_key;
 mod signature;
 
-use crate::CryptError;
+use crate::{
+    key::{KeyFormat, PublicKey},
+    CryptError,
+};
 pub use encrypted::RsaCiphertext;
-pub use public_key::{KeyFormat, PublicKey};
 pub use signature::Signature;
 
 pub struct RSA {

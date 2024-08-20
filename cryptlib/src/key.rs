@@ -5,7 +5,14 @@ use openssl::{
 
 use crate::CryptError;
 
-/// Stores the public key of eighter Rsa or PKey
+/// Stores the public key of eighter Rsa or PKey.
+///
+/// Example:
+/// ``` rust
+/// PublicKey<Rsa<Public>>
+///
+/// PublicKey<PKey<Public>>
+/// ```
 pub struct PublicKey<T> {
     public_key: T,
 }
