@@ -4,4 +4,6 @@ use openssl::error::ErrorStack;
 pub enum CryptError {
     RsaError(ErrorStack),
     AesError(ErrorStack),
+    SignError(ErrorStack),
+    PublicKey(ErrorStack),
 }

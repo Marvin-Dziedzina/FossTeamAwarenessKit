@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 openssl = "0.10.66"
-rand = "0.8.5"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
