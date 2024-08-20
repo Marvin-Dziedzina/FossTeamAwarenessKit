@@ -1,3 +1,4 @@
+/// Stores `AES` ciphertext
 pub struct AesCiphertext {
     ciphertext: Vec<u8>,
     iv: [u8; 16],

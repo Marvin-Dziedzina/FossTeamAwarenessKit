@@ -48,7 +48,7 @@ mod tests {
         let data = b"AES is a symmetric encryption.";
         let aad = b"This will be visible but can not be changed or the decription will fail";
 
-        let aes = AES::new();
+        let aes = AES::new().unwrap();
 
         // Encrypt
         let ciphertext = aes.encrypt(data, aad.to_vec()).unwrap();
