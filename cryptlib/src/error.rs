@@ -7,4 +7,5 @@ pub enum CryptError {
     SignError(ErrorStack),
     PublicKey(ErrorStack),
     Rand(ErrorStack),
+    
 }

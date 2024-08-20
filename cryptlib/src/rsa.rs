@@ -1,19 +1,18 @@
 use openssl::{
     self,
     hash::MessageDigest,
-    pkey::{PKey, Private, Public},
+    pkey::{PKey, Private},
     rsa::{Padding, Rsa},
     sign::{Signer, Verifier},
 };
 
 mod encrypted;
+mod key;
 mod signature;
 
-use crate::{
-    key::{KeyFormat, PublicKey},
-    CryptError,
-};
+use crate::CryptError;
 pub use encrypted::RsaCiphertext;
+pub use key::{KeyFormat, PublicKey, RsaPublicKey, SignPublicKey};
 pub use signature::Signature;
 
 pub struct RSA {
@@ -33,7 +32,7 @@ impl RSA {
         Ok(Self { keys, sign_keys })
     }
 
-    pub fn get_public_rsa_key(&self) -> Result<PublicKey<Rsa<Public>>, CryptError> {
+    pub fn get_public_rsa_key(&self) -> Result<RsaPublicKey, CryptError> {
         // Get public rsa key from keys
         let der = self
             .keys
@@ -41,10 +40,10 @@ impl RSA {
             .map_err(|e| CryptError::RsaError(e))?;
 
         // Create `PublicKey` instance
-        Ok(PublicKey::new_rsa(&der, KeyFormat::DER)?)
+        Ok(RsaPublicKey::new(&der, KeyFormat::DER)?)
     }
 
-    pub fn get_public_sign_key(&self) -> Result<PublicKey<PKey<Public>>, CryptError> {
+    pub fn get_public_sign_key(&self) -> Result<SignPublicKey, CryptError> {
         // Get public sign key from sign_keys
         let der = self
             .sign_keys
@@ -52,13 +51,13 @@ impl RSA {
             .map_err(|e| CryptError::SignError(e))?;
 
         // Create `PublicKey` instance
-        Ok(PublicKey::new_pkey(&der, KeyFormat::DER)?)
+        Ok(SignPublicKey::new(&der, KeyFormat::DER)?)
     }
 
     /// Encrypt data
     pub fn encrypt(
         &self,
-        receiver_public_key: &PublicKey<Rsa<Public>>,
+        receiver_public_key: &RsaPublicKey,
         data: &[u8],
     ) -> Result<RsaCiphertext, CryptError> {
         // Ciphertext buffer
@@ -109,7 +108,7 @@ impl RSA {
     /// Verify data
     pub fn verify(
         &self,
-        public_key: PublicKey<PKey<Public>>,
+        public_key: SignPublicKey,
         data: &[u8],
         signature: Signature,
     ) -> Result<bool, CryptError> {

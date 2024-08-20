@@ -8,23 +8,30 @@ use crate::CryptError;
 
 mod aes_decrypt;
 mod encrypted;
+mod key;
 
 pub use aes_decrypt::AesDecrypted;
 pub use encrypted::AesCiphertext;
+pub use key::AesKey;
 
 pub struct AES {
-    key: [u8; 32],
+    key: AesKey,
     cipher: Cipher,
 }
 impl AES {
     /// Create new `AES` instance.
     pub fn new() -> Result<Self, CryptError> {
         // Generate `AES` key
-        let key = Self::generate_key_32bytes()?;
+        let key = AesKey::new()?;
 
         let cipher = Cipher::aes_256_gcm();
 
         Ok(Self { key, cipher })
+    }
+
+    /// Get AES key
+    pub fn get_key(&self) -> &AesKey {
+        &self.key
     }
 
     /// Encrypt data.
@@ -35,8 +42,15 @@ impl AES {
         let mut tag = [0; 16];
 
         // Encrypt
-        let ciphertext = encrypt_aead(self.cipher, &self.key, Some(&iv), &aad, data, &mut tag)
-            .map_err(|e| CryptError::AesError(e))?;
+        let ciphertext = encrypt_aead(
+            self.cipher,
+            &self.key.get_key(),
+            Some(&iv),
+            &aad,
+            data,
+            &mut tag,
+        )
+        .map_err(|e| CryptError::AesError(e))?;
 
         Ok(AesCiphertext::new(ciphertext, iv, aad, tag))
     }
@@ -46,18 +60,17 @@ impl AES {
         let (ciphertext, iv, aad, tag) = ciphertext.get_components();
 
         // Decrypt
-        let data = decrypt_aead(self.cipher, &self.key, Some(&iv), &aad, &ciphertext, &tag)
-            .map_err(|e| CryptError::AesError(e))?;
+        let data = decrypt_aead(
+            self.cipher,
+            &self.key.get_key(),
+            Some(&iv),
+            &aad,
+            &ciphertext,
+            &tag,
+        )
+        .map_err(|e| CryptError::AesError(e))?;
 
         Ok(AesDecrypted::new(data, aad))
-    }
-
-    /// Generate a 32 byte random key.
-    fn generate_key_32bytes() -> Result<[u8; 32], CryptError> {
-        let mut key = [0; 32];
-        rand_bytes(&mut key).map_err(|e| CryptError::Rand(e))?;
-
-        Ok(key)
     }
 
     /// Generate a 16 byte random iv.

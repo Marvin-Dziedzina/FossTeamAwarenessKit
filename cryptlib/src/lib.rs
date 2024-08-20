@@ -1,6 +1,5 @@
 pub mod aes;
 mod error;
-pub mod key;
 pub mod rsa;
 
 pub use error::CryptError;
