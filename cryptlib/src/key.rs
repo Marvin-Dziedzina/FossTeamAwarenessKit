@@ -10,7 +10,6 @@ use crate::CryptError;
 /// Example:
 /// ``` rust
 /// PublicKey<Rsa<Public>>
-///
 /// PublicKey<PKey<Public>>
 /// ```
 pub struct PublicKey<T> {
