@@ -6,11 +6,12 @@ pub use error::CryptError;
 
 #[cfg(test)]
 mod tests {
-
-    use aes::AES;
-    use rsa::RSA;
+    use std::{fs, io::Write};
 
     use super::*;
+
+    use aes::AES;
+    use rsa::{RsaPublicKey, SignPublicKey, RSA};
 
     #[test]
     fn rsa() {
@@ -60,5 +61,49 @@ mod tests {
         assert_eq!(data.to_vec(), out.data);
 
         assert_eq!(aad.to_vec(), out.aad);
+    }
+
+    #[test]
+    fn rsa_serde() {
+        let rsa = RSA::new(2048).unwrap();
+
+        let json = serde_json::to_string(&rsa).unwrap();
+
+        let _: RSA = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(true, true);
+    }
+
+    #[test]
+    fn aes_serde() {
+        let aes = AES::new().unwrap();
+
+        let json = serde_json::to_string(&aes).unwrap();
+
+        let _: AES = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(true, true);
+    }
+
+    #[test]
+    fn rsa_public_key_serde() {
+        let rsa_public_key = RSA::new(2048).unwrap().get_public_rsa_key().unwrap();
+
+        let json = serde_json::to_string(&rsa_public_key).unwrap();
+
+        let _: RsaPublicKey = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(true, true);
+    }
+
+    #[test]
+    fn sign_public_key_serde() {
+        let sign_public_key = RSA::new(2048).unwrap().get_public_sign_key().unwrap();
+
+        let json = serde_json::to_string(&sign_public_key).unwrap();
+
+        let _: SignPublicKey = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(true, true);
     }
 }

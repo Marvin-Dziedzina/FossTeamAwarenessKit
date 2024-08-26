@@ -1,4 +1,7 @@
+use serde::{Deserialize, Serialize};
+
 /// Stores a signature
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Signature {
     signature: Vec<u8>,
 }

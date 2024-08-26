@@ -1,4 +1,7 @@
+use serde::{Deserialize, Serialize};
+
 /// Stores a ciphertext
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RsaCiphertext {
     ciphertext: Vec<u8>,
 }

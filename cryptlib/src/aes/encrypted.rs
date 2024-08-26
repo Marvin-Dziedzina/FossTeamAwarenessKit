@@ -1,4 +1,7 @@
+use serde::{Deserialize, Serialize};
+
 /// Stores `AES` ciphertext
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AesCiphertext {
     ciphertext: Vec<u8>,
     iv: [u8; 16],

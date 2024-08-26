@@ -5,16 +5,23 @@ use openssl::{
     rsa::{Padding, Rsa},
     sign::{Signer, Verifier},
 };
+use serde::{
+    de::{self, Visitor},
+    ser::{Error, SerializeStruct},
+    Deserialize, Serialize,
+};
 
 mod encrypted;
 mod key;
 mod signature;
 
 use crate::CryptError;
+
 pub use encrypted::RsaCiphertext;
 pub use key::{KeyFormat, PublicKey, RsaPublicKey, SignPublicKey};
 pub use signature::Signature;
 
+#[derive(Debug)]
 pub struct RSA {
     keys: Rsa<Private>,
     sign_keys: PKey<Private>,
@@ -28,6 +35,18 @@ impl RSA {
         // Generate signing keys
         let rsa_keys = Rsa::generate(bits).map_err(|e| CryptError::RsaError(e))?;
         let sign_keys = PKey::from_rsa(rsa_keys).map_err(|e| CryptError::RsaError(e))?;
+
+        Ok(Self { keys, sign_keys })
+    }
+
+    pub fn from_private_key_pems(
+        rsa_private_pem: Vec<u8>,
+        sign_private_pem: Vec<u8>,
+    ) -> Result<Self, CryptError> {
+        let keys =
+            Rsa::private_key_from_pem(&rsa_private_pem).map_err(|e| CryptError::RsaError(e))?;
+        let sign_keys =
+            PKey::private_key_from_pem(&sign_private_pem).map_err(|e| CryptError::SignError(e))?;
 
         Ok(Self { keys, sign_keys })
     }
@@ -125,5 +144,92 @@ impl RSA {
         Ok(verifier
             .verify(&signature.get_signature())
             .map_err(|e| CryptError::SignError(e))?)
+    }
+}
+
+impl Serialize for RSA {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let private_rsa_key = &self.keys.private_key_to_pem().map_err(|e| {
+            S::Error::custom(format!("Could not serialize RSA private key! Error: {}", e))
+        })?;
+        let private_sign_key = &self.sign_keys.private_key_to_pem_pkcs8().map_err(|e| {
+            S::Error::custom(format!(
+                "Could not serialize RSA private sign key! Error: {}",
+                e
+            ))
+        })?;
+
+        let mut state = serializer.serialize_struct("RSA", 2)?;
+
+        state.serialize_field("private_key", private_rsa_key)?;
+        state.serialize_field("private_sign_key", private_sign_key)?;
+
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for RSA {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct RSAVisitor;
+
+        impl<'de> Visitor<'de> for RSAVisitor {
+            type Value = RSA;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a private_key and a private_sign_key each containing an array holding a sequence of bytes")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                let mut private_key: Option<Vec<u8>> = None;
+                let mut private_sign_key: Option<Vec<u8>> = None;
+
+                while let Some(key) = map.next_key::<String>()? {
+                    match key.as_str() {
+                        "private_key" => {
+                            if private_key.is_some() {
+                                return Err(de::Error::duplicate_field("private_key"));
+                            }
+
+                            private_key = Some(map.next_value()?);
+                        }
+                        "private_sign_key" => {
+                            if private_sign_key.is_some() {
+                                return Err(de::Error::duplicate_field("private_sign_key"));
+                            }
+
+                            private_sign_key = Some(map.next_value()?);
+                        }
+                        _ => {
+                            return Err(de::Error::unknown_field(
+                                &key,
+                                &["private_key", "private_sign_key"],
+                            ))
+                        }
+                    }
+                }
+
+                let private_key =
+                    private_key.ok_or_else(|| de::Error::missing_field("private_key"))?;
+                let private_sign_key =
+                    private_sign_key.ok_or_else(|| de::Error::missing_field("private_sign_key"))?;
+
+                Ok(
+                    RSA::from_private_key_pems(private_key, private_sign_key).map_err(|e| {
+                        de::Error::custom(format!("Could not initialize RSA! Error: {}", e))
+                    })?,
+                )
+            }
+        }
+
+        deserializer.deserialize_struct("RSA", &["private_key", "private_sign_key"], RSAVisitor)
     }
 }
