@@ -6,8 +6,6 @@ pub use error::CryptError;
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, io::Write};
-
     use super::*;
 
     use aes::AES;
