@@ -52,8 +52,8 @@ impl AES {
     }
 
     /// Get AES key
-    pub fn get_key(&self) -> &AesKey {
-        &self.key
+    pub fn get_key(&self) -> AesKey {
+        self.key.clone()
     }
 
     /// Encrypt data.
@@ -66,7 +66,7 @@ impl AES {
         // Encrypt
         let ciphertext = encrypt_aead(
             self.cipher,
-            &self.key.get_key(),
+            &self.key.get_bytes(),
             Some(&iv),
             &aad,
             data,
@@ -84,7 +84,7 @@ impl AES {
         // Decrypt
         let data = decrypt_aead(
             self.cipher,
-            &self.key.get_key(),
+            &self.key.get_bytes(),
             Some(&iv),
             &aad,
             &ciphertext,
@@ -121,7 +121,7 @@ impl Serialize for AES {
     {
         let mut state = serializer.serialize_struct("AES", 1)?;
 
-        state.serialize_field("key", &self.key.get_key())?;
+        state.serialize_field("key", &self.key.get_bytes())?;
 
         state.end()
     }
