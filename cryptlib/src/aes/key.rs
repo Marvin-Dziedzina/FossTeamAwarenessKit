@@ -19,7 +19,7 @@ impl AesKey {
         Self { key: bytes }
     }
 
-    pub fn get_key(&self) -> [u8; 32] {
+    pub fn get_bytes(&self) -> [u8; 32] {
         self.key
     }
 
@@ -29,5 +29,13 @@ impl AesKey {
         rand_bytes(&mut key).map_err(|e| CryptError::RandError(e))?;
 
         Ok(key)
+    }
+}
+
+impl Clone for AesKey {
+    fn clone(&self) -> Self {
+        Self {
+            key: self.get_bytes(),
+        }
     }
 }
