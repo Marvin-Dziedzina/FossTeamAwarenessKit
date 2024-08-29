@@ -60,4 +60,8 @@ impl EncryptedAesKey {
     pub fn new(encrypted_key: String) -> Self {
         Self { encrypted_key }
     }
+
+    pub fn get_component(self) -> String {
+        self.encrypted_key
+    }
 }
