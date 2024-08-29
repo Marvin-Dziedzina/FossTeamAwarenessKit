@@ -19,6 +19,19 @@ impl AesKey {
         Self { key: bytes }
     }
 
+    pub fn from_vec(vec: &Vec<u8>) -> Result<Self, CryptError> {
+        if vec.len() != 32 {
+            return Err(CryptError::AesKeyLenghtError(String::from(
+                "Key lenght is not 32 bits!",
+            )));
+        };
+
+        let mut key: [u8; 32] = [0; 32];
+        key.clone_from_slice(&vec);
+
+        Ok(Self { key })
+    }
+
     pub fn get_bytes(&self) -> [u8; 32] {
         self.key
     }
@@ -37,5 +50,14 @@ impl Clone for AesKey {
         Self {
             key: self.get_bytes(),
         }
+    }
+}
+
+pub struct EncryptedAesKey {
+    encrypted_key: String,
+}
+impl EncryptedAesKey {
+    pub fn new(encrypted_key: String) -> Self {
+        Self { encrypted_key }
     }
 }

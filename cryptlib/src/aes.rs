@@ -19,7 +19,7 @@ mod key;
 
 pub use aes_decrypt::AesDecrypted;
 pub use encrypted::AesCiphertext;
-pub use key::AesKey;
+pub use key::{AesKey, EncryptedAesKey};
 
 pub struct AES {
     key: AesKey,
@@ -54,6 +54,11 @@ impl AES {
     /// Get AES key
     pub fn get_key(&self) -> AesKey {
         self.key.clone()
+    }
+
+    /// Set AES key
+    pub fn set_key(&mut self, key: AesKey) {
+        self.key = key;
     }
 
     /// Encrypt data.

@@ -18,7 +18,7 @@ mod signature;
 use crate::CryptError;
 
 pub use encrypted::RsaCiphertext;
-pub use key::{KeyFormat, PublicKey, RsaPublicKey, SignPublicKey};
+pub use key::{KeyFormat, PublicKey};
 pub use signature::Signature;
 
 #[derive(Debug)]
@@ -51,32 +51,32 @@ impl RSA {
         Ok(Self { keys, sign_keys })
     }
 
-    pub fn get_public_rsa_key(&self) -> Result<RsaPublicKey, CryptError> {
+    pub fn get_public_keys(&self) -> Result<PublicKey, CryptError> {
         // Get public rsa key from keys
-        let der = self
+        let rsa_public_key_der = self
             .keys
             .public_key_to_der()
             .map_err(|e| CryptError::RsaError(e))?;
 
-        // Create `PublicKey` instance
-        Ok(RsaPublicKey::new(&der, KeyFormat::DER)?)
-    }
-
-    pub fn get_public_sign_key(&self) -> Result<SignPublicKey, CryptError> {
         // Get public sign key from sign_keys
-        let der = self
+        let sign_public_key_der = self
             .sign_keys
             .public_key_to_der()
             .map_err(|e| CryptError::SignError(e))?;
 
         // Create `PublicKey` instance
-        Ok(SignPublicKey::new(&der, KeyFormat::DER)?)
+        Ok(PublicKey::new(
+            &rsa_public_key_der,
+            KeyFormat::DER,
+            &sign_public_key_der,
+            KeyFormat::DER,
+        )?)
     }
 
     /// Encrypt data
     pub fn encrypt(
         &self,
-        receiver_public_key: &RsaPublicKey,
+        receiver_public_key: &PublicKey,
         data: &[u8],
     ) -> Result<RsaCiphertext, CryptError> {
         // Ciphertext buffer
@@ -84,7 +84,7 @@ impl RSA {
 
         // Encrypt
         receiver_public_key
-            .get_key()
+            .get_rsa_key()
             .public_encrypt(data, &mut ciphertext, Padding::PKCS1_OAEP)
             .map_err(|e| CryptError::RsaError(e))?;
 
@@ -127,12 +127,12 @@ impl RSA {
     /// Verify data
     pub fn verify(
         &self,
-        public_key: SignPublicKey,
+        public_key: &PublicKey,
         data: &[u8],
         signature: Signature,
     ) -> Result<bool, CryptError> {
         // Create `verifier`
-        let mut verifier = Verifier::new(MessageDigest::sha512(), public_key.get_key())
+        let mut verifier = Verifier::new(MessageDigest::sha512(), public_key.get_sign_key())
             .map_err(|e| CryptError::SignError(e))?;
 
         // Add data to be verified
