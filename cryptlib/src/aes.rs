@@ -16,7 +16,6 @@ use crate::CryptError;
 mod aes_decrypt;
 mod encrypted;
 mod key;
-
 pub use aes_decrypt::AesDecrypted;
 pub use encrypted::AesCiphertext;
 pub use key::{AesKey, EncryptedAesKey};
@@ -37,6 +36,7 @@ impl AES {
         })
     }
 
+    /// Create `AES` instance from `AesKey`.
     pub fn from_key(key: AesKey) -> Self {
         Self {
             key,
@@ -44,6 +44,7 @@ impl AES {
         }
     }
 
+    /// Create instance of `AES` from aes key bytes.
     pub fn from_key_bytes(bytes: [u8; 32]) -> Self {
         Self {
             key: AesKey::from_bytes(bytes),
@@ -108,6 +109,7 @@ impl AES {
         Ok(key)
     }
 
+    /// Return aes_256_gcm cipher.
     fn get_cipher() -> Cipher {
         Cipher::aes_256_gcm()
     }

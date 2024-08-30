@@ -9,7 +9,7 @@ pub enum CryptError {
     SignError(ErrorStack),
     PublicKey(ErrorStack),
     RandError(ErrorStack),
-    AesKeyLenghtError(String),
+    AesKeyError(String),
 }
 
 impl Display for CryptError {
@@ -20,7 +20,7 @@ impl Display for CryptError {
             CryptError::SignError(e) => write!(f, "Sign Error: {}", e),
             CryptError::PublicKey(e) => write!(f, "Public Key Error: {}", e),
             CryptError::RandError(e) => write!(f, "Rand Error: {}", e),
-            CryptError::AesKeyLenghtError(e) => write!(f, "AES Kez Lenght Error: {}", e),
+            CryptError::AesKeyError(e) => write!(f, "AES Kez Lenght Error: {}", e),
         }
     }
 }

@@ -39,6 +39,7 @@ impl RSA {
         Ok(Self { keys, sign_keys })
     }
 
+    /// Create new instance of `RSA` from private keys vec.
     pub fn from_private_key_pems(
         rsa_private_pem: Vec<u8>,
         sign_private_pem: Vec<u8>,
@@ -51,6 +52,7 @@ impl RSA {
         Ok(Self { keys, sign_keys })
     }
 
+    /// Get public keys.
     pub fn get_public_keys(&self) -> Result<PublicKey, CryptError> {
         // Get public rsa key from keys
         let rsa_public_key_der = self

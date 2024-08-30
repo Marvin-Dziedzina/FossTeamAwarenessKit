@@ -9,19 +9,22 @@ pub struct AesKey {
     key: [u8; 32],
 }
 impl AesKey {
+    /// Create new instance of AesKey. This generates a new key.
     pub fn new() -> Result<Self, CryptError> {
         Ok(Self {
             key: Self::generate_key_32bytes()?,
         })
     }
 
+    /// Creates a new instance from bytes.
     pub fn from_bytes(bytes: [u8; 32]) -> Self {
         Self { key: bytes }
     }
 
+    /// Create `AesKey` instance from a key vec.
     pub fn from_vec(vec: &Vec<u8>) -> Result<Self, CryptError> {
         if vec.len() != 32 {
-            return Err(CryptError::AesKeyLenghtError(String::from(
+            return Err(CryptError::AesKeyError(String::from(
                 "Key lenght is not 32 bits!",
             )));
         };
@@ -32,6 +35,7 @@ impl AesKey {
         Ok(Self { key })
     }
 
+    /// Get the bytes of the key.
     pub fn get_bytes(&self) -> [u8; 32] {
         self.key
     }

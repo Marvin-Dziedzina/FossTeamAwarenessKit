@@ -10,12 +10,14 @@ use serde::{
 
 use crate::CryptError;
 
+/// Stores the rsa public key and the sign public key.
 #[derive(Debug)]
 pub struct PublicKey {
     rsa_key: Rsa<Public>,
     sign_key: PKey<Public>,
 }
 impl PublicKey {
+    /// Create new instance of `PublicKey` from public keys.
     pub fn new(
         rsa_public_key: &[u8],
         rsa_public_key_format: KeyFormat,
