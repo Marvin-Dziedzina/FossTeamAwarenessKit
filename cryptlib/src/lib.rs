@@ -83,7 +83,7 @@ mod tests {
     use rsa::RSA;
 
     #[test]
-    fn crypt_lib() {
+    fn crypt_lib_encryption() {
         let mut crypt_lib = CryptLib::new(2048).unwrap();
 
         let data = "Encrypted data!".as_bytes();
@@ -99,6 +99,21 @@ mod tests {
 
         assert_eq!(data, data_dec);
         assert_eq!(aad, aad_dec);
+    }
+
+    #[test]
+    fn crypt_lib_signing() {
+        let crypt_lib = CryptLib::new(2048).unwrap();
+
+        let data = "Test".as_bytes();
+
+        let signature = crypt_lib.sign(data).unwrap();
+
+        let result = crypt_lib
+            .verify(&crypt_lib.get_public_keys().unwrap(), data, signature)
+            .unwrap();
+
+        assert_eq!(true, result);
     }
 
     #[test]
