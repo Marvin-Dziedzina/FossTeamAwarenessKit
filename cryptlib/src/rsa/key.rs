@@ -43,8 +43,36 @@ impl PublicKey {
         &self.rsa_key
     }
 
+    pub fn get_rsa_key_der(&self) -> Result<Vec<u8>, CryptError> {
+        Ok(self
+            .rsa_key
+            .public_key_to_der()
+            .map_err(|e| CryptError::PublicKey(e))?)
+    }
+
+    pub fn get_rsa_key_pem(&self) -> Result<Vec<u8>, CryptError> {
+        Ok(self
+            .rsa_key
+            .public_key_to_pem()
+            .map_err(|e| CryptError::PublicKey(e))?)
+    }
+
     pub fn get_sign_key(&self) -> &PKey<Public> {
         &self.sign_key
+    }
+
+    pub fn get_sign_key_der(&self) -> Result<Vec<u8>, CryptError> {
+        Ok(self
+            .sign_key
+            .public_key_to_der()
+            .map_err(|e| CryptError::PublicKey(e))?)
+    }
+
+    pub fn get_sign_key_pem(&self) -> Result<Vec<u8>, CryptError> {
+        Ok(self
+            .sign_key
+            .public_key_to_pem()
+            .map_err(|e| CryptError::PublicKey(e))?)
     }
 }
 
