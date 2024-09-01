@@ -1,5 +1,6 @@
 use crate::{aes::AesCiphertext, rsa::RsaCiphertext};
 
+/// `rsa_ciphertext` holds the encrypted aes key. `aes_ciphertext` holds the aes encrypted data.
 pub struct CiphertextData {
     rsa_ciphertext: RsaCiphertext,
     aes_ciphertext: AesCiphertext,
