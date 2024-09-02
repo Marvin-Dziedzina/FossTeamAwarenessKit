@@ -187,3 +187,35 @@ impl<'de> Deserialize<'de> for AES {
         deserializer.deserialize_struct("AES", &["key"], AESVisitor)
     }
 }
+
+#[cfg(test)]
+mod aes_tests {
+    use crate::*;
+
+    #[test]
+    fn aes() {
+        let data = b"AES is a symmetric encryption.";
+        let aad = b"This will be visible but can not be changed or the decription will fail";
+
+        let aes = AES::new().unwrap();
+
+        // Encrypt
+        let ciphertext = aes.encrypt(data, aad.to_vec()).unwrap();
+
+        // Decrypt
+        let out = aes.decrypt(ciphertext).unwrap();
+
+        assert_eq!(data.to_vec(), out.data);
+
+        assert_eq!(aad.to_vec(), out.aad);
+    }
+
+    #[test]
+    fn aes_serde() {
+        let aes = AES::new().unwrap();
+
+        let json = serde_json::to_string(&aes).unwrap();
+
+        let _: AES = serde_json::from_str(&json).unwrap();
+    }
+}

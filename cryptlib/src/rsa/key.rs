@@ -178,3 +178,51 @@ pub enum KeyFormat {
     PEM,
     DER,
 }
+
+#[cfg(test)]
+mod public_key_tests {
+    use crate::*;
+
+    #[test]
+    fn public_key_serde() {
+        let public_key = RSA::new(2048).unwrap().get_public_keys().unwrap();
+
+        let json = serde_json::to_string(&public_key).unwrap();
+
+        let _: PublicKey = serde_json::from_str(&json).unwrap();
+    }
+
+    #[test]
+    fn get_public_key() {
+        get_pub_key().unwrap();
+    }
+
+    #[test]
+    fn get_rsa_key_der() {
+        let public_key = get_pub_key().unwrap();
+        public_key.get_rsa_key_der().unwrap();
+    }
+
+    #[test]
+    fn get_rsa_key_pem() {
+        let public_key = get_pub_key().unwrap();
+        public_key.get_rsa_key_pem().unwrap();
+    }
+
+    #[test]
+    fn get_sign_key_der() {
+        let public_key = get_pub_key().unwrap();
+        public_key.get_sign_key_der().unwrap();
+    }
+
+    #[test]
+    fn get_sign_key_pem() {
+        let public_key = get_pub_key().unwrap();
+        public_key.get_sign_key_pem().unwrap();
+    }
+
+    fn get_pub_key() -> Result<PublicKey, CryptError> {
+        let rsa = RSA::new(2048)?;
+        rsa.get_public_keys()
+    }
+}
