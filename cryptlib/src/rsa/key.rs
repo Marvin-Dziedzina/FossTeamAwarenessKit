@@ -11,7 +11,7 @@ use serde::{
 use crate::CryptError;
 
 /// Stores the rsa public key and the sign public key.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PublicKey {
     rsa_key: Rsa<Public>,
     sign_key: PKey<Public>,

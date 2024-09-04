@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{aes::AesCiphertext, rsa::RsaCiphertext};
 
 /// `rsa_ciphertext` holds the encrypted aes key. `aes_ciphertext` holds the aes encrypted data.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CiphertextData {
     rsa_ciphertext: RsaCiphertext,
     aes_ciphertext: AesCiphertext,
