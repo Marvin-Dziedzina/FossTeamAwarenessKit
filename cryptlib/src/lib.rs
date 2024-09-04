@@ -49,7 +49,7 @@ impl CryptLib {
         Ok(CiphertextData::new(aes_key, aes_ciphertext))
     }
 
-    /// Decrypt `EncryptedData`.
+    /// Decrypt `CiphertextData`.
     pub fn decrypt(&mut self, ciphertext: CiphertextData) -> Result<AesDecrypted, CryptError> {
         let (rsa_ciphertext, aes_ciphertext) = ciphertext.get_components();
 
