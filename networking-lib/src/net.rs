@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use log::error;
 use tokio::{
     net::{TcpListener, TcpStream},
     task::JoinHandle,
