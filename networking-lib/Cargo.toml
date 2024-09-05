@@ -1,0 +1,12 @@
+[package]
+name = "networking-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bincode = "1.3.3"
+serde = { version = "1.0.209", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["full"] }
+
+[dependencies.cryptlib]
+path = "../cryptlib"
