@@ -80,7 +80,7 @@ mod crypt_lib_tests {
 
     #[test]
     fn crypt_lib_encryption() {
-        let mut crypt_lib = CryptLib::new(2048).unwrap();
+        let crypt_lib = CryptLib::new(2048).unwrap();
 
         let data = "Encrypted data!".as_bytes();
         let aad = "AAD data".as_bytes().to_vec();
