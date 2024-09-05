@@ -66,13 +66,22 @@ impl AES {
     /// `aad` is additional data that is not encrypted but is protected against tampering.
     /// `aad` has no size limit.
     pub fn encrypt(&self, data: &[u8], aad: Vec<u8>) -> Result<AesCiphertext, CryptError> {
+        self.encrypt_from_key(data, aad, &self.get_key())
+    }
+
+    pub fn encrypt_from_key(
+        &self,
+        data: &[u8],
+        aad: Vec<u8>,
+        key: &AesKey,
+    ) -> Result<AesCiphertext, CryptError> {
         let iv = Self::generate_iv_16bytes()?;
         let mut tag = [0; 16];
 
         // Encrypt
         let ciphertext = encrypt_aead(
             self.cipher,
-            &self.key.get_bytes(),
+            &key.get_bytes(),
             Some(&iv),
             &aad,
             data,
@@ -85,12 +94,20 @@ impl AES {
 
     /// Decript data.
     pub fn decrypt(&self, ciphertext: AesCiphertext) -> Result<AesDecrypted, CryptError> {
+        self.decrypt_from_key(ciphertext, &self.get_key())
+    }
+
+    pub fn decrypt_from_key(
+        &self,
+        ciphertext: AesCiphertext,
+        key: &AesKey,
+    ) -> Result<AesDecrypted, CryptError> {
         let (ciphertext, iv, aad, tag) = ciphertext.get_components();
 
         // Decrypt
         let data = decrypt_aead(
             self.cipher,
-            &self.key.get_bytes(),
+            &key.get_bytes(),
             Some(&iv),
             &aad,
             &ciphertext,

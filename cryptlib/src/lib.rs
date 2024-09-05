@@ -55,8 +55,7 @@ impl CryptLib {
 
         let aes_key = AesKey::from_vec(&self.rsa.decrypt(rsa_ciphertext)?)?;
 
-        self.aes.set_key(aes_key);
-        self.aes.decrypt(aes_ciphertext)
+        self.aes.decrypt_from_key(aes_ciphertext, &aes_key)
     }
 
     /// Sign data
