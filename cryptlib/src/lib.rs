@@ -50,7 +50,7 @@ impl CryptLib {
     }
 
     /// Decrypt `CiphertextData`.
-    pub fn decrypt(&mut self, ciphertext: CiphertextData) -> Result<AesDecrypted, CryptError> {
+    pub fn decrypt(&self, ciphertext: CiphertextData) -> Result<AesDecrypted, CryptError> {
         let (rsa_ciphertext, aes_ciphertext) = ciphertext.get_components();
 
         let aes_key = AesKey::from_vec(&self.rsa.decrypt(rsa_ciphertext)?)?;
