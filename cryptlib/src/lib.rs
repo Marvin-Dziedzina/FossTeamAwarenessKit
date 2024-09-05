@@ -5,6 +5,7 @@ pub mod rsa;
 
 use aes::{AesDecrypted, AesKey, AES};
 pub use error::CryptError;
+use openssl::sha::Sha256;
 pub use responses::CiphertextData;
 use rsa::{PublicKey, Signature, RSA};
 use serde::{Deserialize, Serialize};
@@ -72,6 +73,14 @@ impl CryptLib {
     ) -> Result<bool, CryptError> {
         self.rsa.verify(public_key, data, signature)
     }
+
+    pub fn sha256(&self, buf: &[u8]) -> [u8; 32] {
+        let mut hasher = Sha256::new();
+
+        hasher.update(buf);
+
+        hasher.finish()
+    }
 }
 
 #[cfg(test)]
@@ -119,5 +128,23 @@ mod crypt_lib_tests {
         let json = serde_json::to_string(&crypt_lib).unwrap();
 
         let _: CryptLib = serde_json::from_str(&json).unwrap();
+    }
+
+    #[test]
+    fn sha256_test() {
+        let crypt_lib = CryptLib::new(2048).unwrap();
+
+        let buf = b"Sha256 Test";
+
+        let hash = crypt_lib.sha256(buf);
+
+        assert_eq!(
+            hash,
+            [
+                // This array represents the sha256 hash of "Sha256 Test"
+                166, 60, 82, 147, 46, 231, 78, 240, 20, 236, 61, 240, 28, 106, 175, 103, 46, 102,
+                174, 38, 19, 220, 90, 2, 210, 253, 126, 140, 69, 27, 30, 112
+            ]
+        );
     }
 }
