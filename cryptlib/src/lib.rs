@@ -74,7 +74,7 @@ impl CryptLib {
         self.rsa.verify(public_key, data, signature)
     }
 
-    pub fn sha256(&self, buf: &[u8]) -> [u8; 32] {
+    pub fn sha256(buf: &[u8]) -> [u8; 32] {
         let mut hasher = Sha256::new();
 
         hasher.update(buf);
@@ -132,11 +132,9 @@ mod crypt_lib_tests {
 
     #[test]
     fn sha256_test() {
-        let crypt_lib = CryptLib::new(2048).unwrap();
-
         let buf = b"Sha256 Test";
 
-        let hash = crypt_lib.sha256(buf);
+        let hash = CryptLib::sha256(buf);
 
         assert_eq!(
             hash,
