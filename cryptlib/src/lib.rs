@@ -10,6 +10,8 @@ pub use responses::CiphertextData;
 use rsa::{PublicKey, Signature, RSA};
 use serde::{Deserialize, Serialize};
 
+pub type Sha256Hash = [u8; 32];
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CryptLib {
     rsa: RSA,
@@ -74,7 +76,7 @@ impl CryptLib {
         self.rsa.verify(public_key, data, signature)
     }
 
-    pub fn sha256(buf: &[u8]) -> [u8; 32] {
+    pub fn sha256(buf: &[u8]) -> Sha256Hash {
         let mut hasher = Sha256::new();
 
         hasher.update(buf);
