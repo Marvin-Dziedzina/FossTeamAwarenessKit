@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{error::Error, fmt::Display};
 
 use openssl::error::ErrorStack;
 
@@ -24,3 +24,5 @@ impl Display for CryptError {
         }
     }
 }
+
+impl Error for CryptError {}
