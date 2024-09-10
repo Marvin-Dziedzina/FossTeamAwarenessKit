@@ -9,4 +9,4 @@ serde = { version = "1.0.209", features = ["derive"] }
 tokio = { version = "1.40.0", features = ["full"] }
 
 [dependencies.cryptlib]
-path = "../cryptlib"
+git = "https://github.com/Marvin-Dziedzina/cryptlib"
