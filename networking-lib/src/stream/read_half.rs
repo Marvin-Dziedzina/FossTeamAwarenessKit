@@ -78,10 +78,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
         stream: &Arc<RwLock<Stream<S>>>,
     ) -> Option<Option<Packet<S>>> {
         match transmission_packet.action {
-            Action::Transmission => match bincode::deserialize(transmission_packet.get_packets()) {
-                Ok(packet) => packet,
-                Err(_) => None,
-            },
+            Action::Transmission => bincode::deserialize(transmission_packet.get_packets()).unwrap_or_default(),
 
             Action::Resend(hash) => {
                 let stream_rlock = stream.read().await;
@@ -173,7 +170,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
         read_half_lock
             .read_exact(&mut buf)
             .await
-            .map_err(|e| NetError::IOError(e))?;
+            .map_err(NetError::IOError)?;
 
         let packet_lenght = u64::from_le_bytes(buf);
 

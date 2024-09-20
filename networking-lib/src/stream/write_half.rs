@@ -21,17 +21,17 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
         write_half_lock
             .write_all(&(bytes.len() as u64).to_le_bytes())
             .await
-            .map_err(|e| NetError::IOError(e))?;
+            .map_err(NetError::IOError)?;
 
         write_half_lock
             .write_all(bytes)
             .await
-            .map_err(|e| NetError::IOError(e))?;
+            .map_err(NetError::IOError)?;
 
         write_half_lock
             .flush()
             .await
-            .map_err(|e| NetError::IOError(e))?;
+            .map_err(NetError::IOError)?;
 
         let mut written_packets_lock = self.written_packets.lock().await;
         let hash = CryptLib::sha256(bytes);

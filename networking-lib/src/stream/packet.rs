@@ -38,11 +38,11 @@ impl TransmissionPacket {
 
 impl Bytes for TransmissionPacket {
     fn from_bytes(bytes: &[u8]) -> Result<Self, NetError> {
-        bincode::deserialize(bytes).map_err(|e| NetError::BincodeError(e))
+        bincode::deserialize(bytes).map_err(NetError::BincodeError)
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>, NetError> {
-        bincode::serialize(self).map_err(|e| NetError::BincodeError(e))
+        bincode::serialize(self).map_err(NetError::BincodeError)
     }
 }
 

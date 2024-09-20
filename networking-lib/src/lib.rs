@@ -43,14 +43,14 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
     ) -> Result<Self, NetError> {
         let listener = TcpListener::bind(address)
             .await
-            .map_err(|e| NetError::ListenerError(e))?;
+            .map_err(NetError::ListenerError)?;
 
-        let crypt_lib = CryptLib::new(crypt_lib_bits).map_err(|e| NetError::CryptError(e))?;
+        let crypt_lib = CryptLib::new(crypt_lib_bits).map_err(NetError::CryptError)?;
 
         Ok(Self {
             binding_address: listener
                 .local_addr()
-                .map_err(|e| NetError::ListenerError(e))?
+                .map_err(NetError::ListenerError)?
                 .to_string(),
             listener: Arc::new(listener),
             listener_task: None,
@@ -65,7 +65,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
     pub async fn from_crypt_lib(address: String, crypt_lib: CryptLib) -> Result<Self, NetError> {
         let listener = TcpListener::bind(&address)
             .await
-            .map_err(|e| NetError::ListenerError(e))?;
+            .map_err(NetError::ListenerError)?;
 
         Ok(Self {
             binding_address: address,
@@ -111,8 +111,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
     pub async fn connect<T: ToSocketAddrs>(&self, addr: T) -> Result<(), NetError> {
         let stream = TcpStream::connect(addr)
             .await
-            .map_err(|e| NetError::StreamError(e))?;
-        let address = stream.peer_addr().map_err(|e| NetError::StreamError(e))?;
+            .map_err(NetError::StreamError)?;
+        let address = stream.peer_addr().map_err(NetError::StreamError)?;
 
         Self::add_connection(
             &self.connections,
@@ -344,7 +344,7 @@ impl<'de, S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Se
 
 #[cfg(test)]
 mod tests {
-    use std::{any::Any, fmt::Display};
+    use std::fmt::Display;
 
     use super::*;
 
