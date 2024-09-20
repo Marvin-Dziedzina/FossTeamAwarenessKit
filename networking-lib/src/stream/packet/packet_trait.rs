@@ -10,26 +10,27 @@ use serde::Deserialize;
 /// use std::any::Any;
 ///
 /// use bincode::ErrorKind;
+/// use networking_lib::stream::PacketTrait;
+/// use serde::{Serialize, Deserialize};
 ///
 /// struct FooStruct {
 ///     foo: i32,
 /// }
 ///
-/// struct BazStruct {}
+/// #[derive(Serialize, Deserialize)]
+/// struct BarStruct {}
 ///
 ///
 /// enum Packets {
 ///     Foo(i32),
 ///     Bar,
-///     Baz(BazStruct),
 /// }
 ///
 /// impl PacketTrait for Packets {
 ///     fn to_struct(&self, bytes: &[u8]) -> Result<Box<dyn Any>, Box<ErrorKind>> {
 ///         match self {
-///             Self::Foo(foo) => FooStruct {foo},
-///             Self::Bar => Self::bincode_deserialize(bytes),
-///             Self::Baz(baz_struct) => Box::new(baz_struct),
+///             Self::Foo(foo) => Ok(Box::new(FooStruct {foo: *foo})),
+///             Self::Bar => Ok(Box::new(Self::bincode_deserialize::<BarStruct>(bytes))),
 ///         }
 ///     }
 /// }
@@ -38,13 +39,6 @@ pub trait PacketTrait {
     /// This function should convert the bytes into a struct.
     /// ### Example:
     /// ```
-    /// fn to_struct(&self, bytes: &[u8]) -> Result<Box<dyn Any>, Box<ErrorKind>> {
-    ///     match self {
-    ///         Packets::Foo(foo) => FooStruct {foo},
-    ///         Packets::Bar => Self::bincode_deserialize(bytes),
-    ///         Packets::Baz(baz_struct) => baz_struct,
-    ///     }
-    /// }
     /// ```
     fn to_struct(&self, bytes: &[u8]) -> Result<Box<dyn Any>, Box<ErrorKind>>;
 
