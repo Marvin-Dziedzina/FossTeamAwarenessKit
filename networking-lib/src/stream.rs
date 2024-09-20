@@ -81,7 +81,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
 
     /// Closes the stream.
     pub async fn close(&self) -> Result<(), NetError> {
-        let packet = TransmissionPacket::new(Action::Close, &[0 as u8; 0]);
+        let packet = TransmissionPacket::new(Action::Close, &[0_u8; 0]);
         let result = match self.write(&packet.to_bytes()?).await.err() {
             Some(e) => match e {
                 NetError::StreamNotAlive => Ok(()),

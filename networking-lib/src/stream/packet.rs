@@ -51,12 +51,8 @@ impl<'de> Deserialize<'de> for TransmissionPacket {
     where
         D: serde::Deserializer<'de>,
     {
+        #[derive(Debug, Default)]
         struct TransmissionPacketVisitor {}
-        impl Default for TransmissionPacketVisitor {
-            fn default() -> Self {
-                Self {}
-            }
-        }
 
         impl<'de> Visitor<'de> for TransmissionPacketVisitor {
             type Value = TransmissionPacket;
@@ -130,8 +126,8 @@ impl<'de> Deserialize<'de> for TransmissionPacket {
 #[derive(Debug, Serialize)]
 pub struct Packet<S: Serialize + for<'a> Deserialize<'a>> {
     timestamp: u128,
-    packet_type: S,
-    packet: Vec<u8>,
+    pub packet_type: S,
+    pub packet: Vec<u8>,
 }
 impl<S: Serialize + for<'a> Deserialize<'a>> Packet<S> {
     pub fn new(packet_type: S, packet: Vec<u8>) -> Result<Self, Box<ErrorKind>> {

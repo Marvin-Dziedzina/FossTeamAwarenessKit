@@ -123,7 +123,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         )
         .await?;
 
-        info!("Established connection with {}!", address);
+        // info!("Established connection with {}!", address);
 
         Ok(())
     }
@@ -196,7 +196,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             };
         }
 
-        if errors.len() == 0 {
+        if errors.is_empty() {
             Ok(())
         } else {
             Err(errors)
@@ -310,7 +310,7 @@ impl<'de, S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Se
                         }
                         _ => {
                             return Err(de::Error::unknown_field(
-                                &key,
+                                key,
                                 &["binding_address", "crypt_lib"],
                             ))
                         }
@@ -328,9 +328,9 @@ impl<'de, S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Se
                 let net_lib =
                     rt.block_on(async { NetLib::from_crypt_lib(binding_address, crypt_lib).await });
 
-                Ok(net_lib.map_err(|e| {
+                net_lib.map_err(|e| {
                     de::Error::custom(format!("Could not deserialize `NetLib`! Error: {}", e))
-                })?)
+                })
             }
         }
 
@@ -344,11 +344,18 @@ impl<'de, S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Se
 
 #[cfg(test)]
 mod tests {
+    use std::{any::Any, fmt::Display};
+
     use super::*;
 
     #[derive(Debug, Serialize, Deserialize)]
     struct Message {
         message: String,
+    }
+    impl Display for Message {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.message)
+        }
     }
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -375,14 +382,43 @@ mod tests {
         let mut net_lib1 = NetLib::<CustomPacket>::new("localhost:8080", cryptlib::Bits::Bits2048)
             .await
             .unwrap();
-        let mut net_lib2 = NetLib::<CustomPacket>::new("localhost:8090", cryptlib::Bits::Bits2048)
+        // let mut net_lib2 = NetLib::<CustomPacket>::new("localhost:8090", cryptlib::Bits::Bits2048)
+        //     .await
+        //     .unwrap();
+
+        net_lib1.open().await;
+        // net_lib2.open().await;
+
+        // net_lib2.connect("localhost:8080").await.unwrap();
+
+        net_lib1
+            .send(
+                None,
+                &Message {
+                    message: String::from("Test"),
+                },
+            )
             .await
             .unwrap();
 
-        net_lib1.open().await;
-        net_lib2.open().await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
 
-        net_lib2.connect("localhost:8080").await.unwrap();
+        // let packets = net_lib2.recv(None).await;
+
+        // for (_, packets) in packets.iter() {
+        //     for packet in packets {
+        //         let x: Box<Message> = packet
+        //             .packet_type
+        //             .to_struct(&packet.packet)
+        //             .unwrap()
+        //             .downcast()
+        //             .unwrap();
+        //         println!("Message: {}", x);
+        //     }
+        // }
+
+        net_lib1.close().await;
+        // net_lib2.close().await;
 
         assert_eq!(true, true);
     }

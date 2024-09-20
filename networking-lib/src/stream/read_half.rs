@@ -44,14 +44,14 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
             };
 
             // Read packet lenght and the packet
-            let packet_lenght = match Self::read_packet_lenght(&read_half).await {
+            let packet_lenght = match Self::read_packet_lenght(read_half).await {
                 Ok(packet_lenght) => packet_lenght,
                 Err(_) => {
                     Self::detected_eof(is_stream_alive.clone()).await;
                     continue;
                 }
             };
-            let transmission_packet = match Self::read_packet(&read_half, packet_lenght).await {
+            let transmission_packet = match Self::read_packet(read_half, packet_lenght).await {
                 Ok(transmission_packet) => transmission_packet,
                 Err(_) => {
                     Self::detected_eof(is_stream_alive.clone()).await;
@@ -80,7 +80,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
         match transmission_packet.action {
             Action::Transmission => match bincode::deserialize(transmission_packet.get_packets()) {
                 Ok(packet) => packet,
-                Err(_) => return None,
+                Err(_) => None,
             },
 
             Action::Resend(hash) => {
@@ -127,8 +127,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                     .get_public_keys()
                     .expect("Could not get `PublicKey`");
 
-                let packet =
-                    TransmissionPacket::new(Action::PingResponse(private_key), &[0 as u8; 0]);
+                let packet = TransmissionPacket::new(Action::PingResponse(private_key), &[0_u8; 0]);
                 let bytes = packet
                     .to_bytes()
                     .expect("Could not serialize with bincode!");

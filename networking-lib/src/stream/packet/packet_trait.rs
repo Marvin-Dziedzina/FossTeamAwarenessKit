@@ -7,18 +7,29 @@ use serde::Deserialize;
 ///
 /// ### Example
 /// ```
+/// use std::any::Any;
+///
+/// use bincode::ErrorKind;
+///
+/// struct FooStruct {
+///     foo: i32,
+/// }
+///
+/// struct BazStruct {}
+///
+///
 /// enum Packets {
 ///     Foo(i32),
 ///     Bar,
-///     Baz(BazStruct)
+///     Baz(BazStruct),
 /// }
 ///
 /// impl PacketTrait for Packets {
 ///     fn to_struct(&self, bytes: &[u8]) -> Result<Box<dyn Any>, Box<ErrorKind>> {
 ///         match self {
-///             Packets::Foo(foo) => FooStruct {foo},
-///             Packets::Bar => Self::bincode_deserialize(bytes),
-///             Packets::Baz(baz_struct) => baz_struct,
+///             Self::Foo(foo) => FooStruct {foo},
+///             Self::Bar => Self::bincode_deserialize(bytes),
+///             Self::Baz(baz_struct) => Box::new(baz_struct),
 ///         }
 ///     }
 /// }
@@ -38,6 +49,6 @@ pub trait PacketTrait {
     fn to_struct(&self, bytes: &[u8]) -> Result<Box<dyn Any>, Box<ErrorKind>>;
 
     fn bincode_deserialize<S: for<'a> Deserialize<'a>>(bytes: &[u8]) -> Result<S, Box<ErrorKind>> {
-        Ok(bincode::deserialize(bytes)?)
+        bincode::deserialize(bytes)
     }
 }
