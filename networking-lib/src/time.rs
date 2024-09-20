@@ -1,8 +1,8 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{self, UNIX_EPOCH};
 
 pub fn get_unix_epoch_timestamp() -> u128 {
-    SystemTime::now()
+    time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("Time went Backwards!")
+        .expect("System before UNIX epoch!")
         .as_millis()
 }
