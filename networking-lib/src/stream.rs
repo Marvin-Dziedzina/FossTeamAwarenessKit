@@ -1,8 +1,9 @@
+use std::net::SocketAddr;
 use std::{collections::HashMap, sync::Arc};
 
 use cryptlib::rsa::PublicKey;
 use cryptlib::{CryptLib, Sha256Hash};
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tokio::io::{BufReader, BufWriter};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
@@ -28,6 +29,7 @@ pub struct Stream<
     S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 'static,
 > {
     is_stream_alive: Arc<RwLock<bool>>,
+    peer_address: SocketAddr,
 
     read_half: Arc<Mutex<BufReader<OwnedReadHalf>>>,
     reader_task: Option<JoinHandle<()>>,
@@ -46,6 +48,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         crypt_lib: Arc<RwLock<CryptLib>>,
     ) -> Result<Arc<RwLock<Self>>, NetError> {
         let is_stream_alive = Arc::new(RwLock::new(true));
+        let peer_address = stream.peer_addr().map_err(NetError::StreamError)?;
 
         let (read_half, write_half) = stream.into_split();
         let read_half = Arc::new(Mutex::new(BufReader::new(read_half)));
@@ -56,6 +59,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
 
         let stream = Arc::new(RwLock::new(Self {
             is_stream_alive,
+            peer_address,
 
             read_half,
             reader_task: None,
@@ -76,6 +80,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         stream_wlock.reader_task = Some(reader_task);
         stream_wlock.ping().await?;
 
+        debug!("New stream created.");
+
         Ok(stream)
     }
 
@@ -90,10 +96,12 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             None => Ok(()),
         };
 
+        debug!("Wrote close packet.");
+
         let mut is_stream_alive_wlock = self.is_stream_alive.write().await;
         *is_stream_alive_wlock = false;
 
-        info!("Closed stream!");
+        info!("Closed stream.");
 
         result
     }
@@ -122,6 +130,10 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         let is_stream_alive_rlock = self.is_stream_alive.read().await;
         *is_stream_alive_rlock
     }
+
+    pub async fn get_peer_ip(&self) -> &std::net::SocketAddr {
+        &self.peer_address
+    }
 }
 
 impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 'static> Drop
@@ -132,11 +144,15 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             let is_stream_alive_rlock = rt.block_on(async { self.is_stream_alive.read().await });
             if *is_stream_alive_rlock {
                 rt.block_on(async { self.close().await }).ok();
+                debug!("Closed stream for dropping the stream.");
             };
 
             if let Some(reader_task) = &self.reader_task {
                 reader_task.abort();
+                debug!("Reader Task aborted for dropping the stream.");
             };
+        } else {
+            debug!("Could not drop stream properly.");
         };
     }
 }

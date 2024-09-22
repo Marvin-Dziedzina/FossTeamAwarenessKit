@@ -1,5 +1,5 @@
 use cryptlib::CryptLib;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 
@@ -28,14 +28,13 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
             .await
             .map_err(NetError::IOError)?;
 
-        write_half_lock
-            .flush()
-            .await
-            .map_err(NetError::IOError)?;
+        write_half_lock.flush().await.map_err(NetError::IOError)?;
 
         let mut written_packets_lock = self.written_packets.lock().await;
         let hash = CryptLib::sha256(bytes);
         written_packets_lock.insert(hash, bytes.to_vec());
+
+        debug!("Wrote bytes to stream.");
 
         Ok(())
     }
@@ -50,6 +49,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
             .map_err(NetError::CryptError)?;
         let packet = TransmissionPacket::new(Action::Ping(private_key), &[0_u8; 0]);
         self.write(&packet.to_bytes()?).await?;
+
+        debug!("Sent ping.");
 
         Ok(())
     }

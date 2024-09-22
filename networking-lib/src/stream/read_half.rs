@@ -1,6 +1,6 @@
 use std::{mem, sync::Arc};
 
-use log::warn;
+use log::{debug, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use tokio::{
     io::{AsyncReadExt, BufReader},
@@ -39,7 +39,10 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
             if !*is_stream_alive_rlock {
                 drop(is_stream_alive_rlock);
 
-                time::sleep(time::Duration::from_secs(10)).await;
+                time::sleep(time::Duration::from_millis(50)).await;
+
+                debug!("Stream not alive.");
+
                 continue;
             };
 
@@ -51,6 +54,9 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                     continue;
                 }
             };
+
+            trace!("Read packet lenght {}.", packet_lenght);
+
             let transmission_packet = match Self::read_packet(read_half, packet_lenght).await {
                 Ok(transmission_packet) => transmission_packet,
                 Err(_) => {
@@ -59,16 +65,22 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                 }
             };
 
+            trace!("Got package.");
+
             let packet = match Self::unpack_transmission_packet(transmission_packet, &stream).await
             {
                 Some(value) => value,
                 None => continue,
             };
 
+            trace!("Unpacked transmission packet.");
+
             // Write the packet to `read_packets` if is some.
             if let Some(packet) = packet {
                 let mut read_packets_lock = read_packets.lock().await;
                 read_packets_lock.push(packet);
+
+                debug!("Read packet.");
             };
         }
     }
@@ -78,7 +90,10 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
         stream: &Arc<RwLock<Stream<S>>>,
     ) -> Option<Option<Packet<S>>> {
         match transmission_packet.action {
-            Action::Transmission => bincode::deserialize(transmission_packet.get_packets()).unwrap_or_default(),
+            Action::Transmission => {
+                debug!("Read transmission.");
+                bincode::deserialize(transmission_packet.get_packets()).unwrap_or_default()
+            }
 
             Action::Resend(hash) => {
                 let stream_rlock = stream.read().await;
@@ -89,6 +104,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                         .write(written_packet)
                         .await
                         .expect("Could not wite a resend request!");
+
+                    debug!("Resend packet {}", hex::encode(hash));
                 } else {
                     warn!(
                         "Could not resend {}! It was not found in `written_packets`.",
@@ -103,7 +120,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                 let mut written_packets_lock = stream_rlock.written_packets.lock().await;
 
                 match written_packets_lock.remove(&hash) {
-                    Some(_) => (),
+                    Some(_) => debug!("Delivery of packet {} confimed.", hex::encode(hash)),
                     None => warn!(
                         "Could not remove {}! The packet was received but it could not be found in `written_packets`.",
                         hex::encode(hash)
@@ -114,6 +131,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
             }
 
             Action::Ping(public_key) => {
+                debug!("Got pinged. Public Key: {}", public_key);
+
                 let mut stream_wlock = stream.write().await;
                 stream_wlock.receiver_public_key = Some(public_key);
 
@@ -129,13 +148,15 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                     .to_bytes()
                     .expect("Could not serialize with bincode!");
                 match stream_wlock.write(&bytes).await {
-                    Ok(_) => (),
+                    Ok(_) => debug!("Sent ping response."),
                     Err(e) => warn!("Could not write `PingResponse` to stream! Error: {}", e),
                 };
 
                 None
             }
             Action::PingResponse(public_key) => {
+                debug!("Got ping response. Public Key: {}", public_key);
+
                 let mut stream_wlock = stream.write().await;
                 stream_wlock.receiver_public_key = Some(public_key);
 
@@ -149,6 +170,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
                     .await
                     .expect("Could not close connection!");
 
+                info!("Stream got closed by peer.");
+
                 None
             }
         }
@@ -158,6 +181,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send> S
     async fn detected_eof(is_stream_alive: Arc<RwLock<bool>>) {
         let mut is_stream_alive_wlock = is_stream_alive.write().await;
         *is_stream_alive_wlock = false;
+
+        debug!("EOF detected.");
     }
 
     /// Returns the lenght of the next packet.

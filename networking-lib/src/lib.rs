@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData, net::SocketAddr, ops::Deref, sync::Arc};
 
 use cryptlib::CryptLib;
-use log::info;
+use log::{debug, error, info, trace, warn};
 use serde::{
     de::{self, Visitor},
     ser::SerializeStruct,
@@ -47,6 +47,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
 
         let crypt_lib = CryptLib::new(crypt_lib_bits).map_err(NetError::CryptError)?;
 
+        debug!("Create new NetLib.");
+
         Ok(Self {
             binding_address: listener
                 .local_addr()
@@ -67,6 +69,8 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             .await
             .map_err(NetError::ListenerError)?;
 
+        debug!("Create new NetLib.");
+
         Ok(Self {
             binding_address: address,
             listener: Arc::new(listener),
@@ -86,25 +90,37 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         let streams = self.streams.clone();
         let crypt_lib = self.crypt_lib.clone();
 
-        let listener_thread = tokio::spawn(async {
+        let listener_task = tokio::spawn(async {
             Self::handle_incoming(listener, connections, streams, crypt_lib).await;
         });
 
-        self.listener_task = Some(listener_thread);
+        trace!("Started listener task.");
+
+        self.listener_task = Some(listener_task);
+
+        debug!("Opened NetLib listener.");
     }
 
     pub async fn close(&mut self) {
-        let mut connections = self.connections.lock().await;
+        let mut connections_lock = self.connections.lock().await;
         let mut streams_lock = self.streams.lock().await;
-        for (_, stream) in streams_lock.iter() {
+        for (addr, stream) in streams_lock.iter() {
             let stream_rlock = stream.read().await;
             stream_rlock.close().await.expect("Could not close stream!");
         }
 
-        connections.clear();
+        debug!("Closed connections.");
+
+        connections_lock.clear();
         streams_lock.clear();
+
+        debug!("Cleared connections and streams.");
+
         if let Some(listener_task) = &self.listener_task {
             listener_task.abort();
+            self.listener_task = None;
+
+            debug!("Aborted listener task.");
         };
     }
 
@@ -113,6 +129,7 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             .await
             .map_err(NetError::StreamError)?;
         let address = stream.peer_addr().map_err(NetError::StreamError)?;
+        debug!("Connected to {}.", address.to_string());
 
         Self::add_connection(
             &self.connections,
@@ -122,8 +139,9 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
             &self.crypt_lib,
         )
         .await?;
+        debug!("Added connection.");
 
-        // info!("Established connection with {}!", address);
+        info!("Established connection with {}.", address);
 
         Ok(())
     }
@@ -147,9 +165,12 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
                     .await
                     .unwrap();
 
-                    info!("Got connection from {}!", socket_address.to_string());
+                    info!("Got connection from {}.", socket_address.to_string());
                 }
-                Err(_) => continue,
+                Err(e) => {
+                    error!("Could not get connection! Error: {}", e);
+                    continue;
+                }
             };
         }
     }
@@ -166,9 +187,12 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         let mut stream_lock = streams.lock().await;
 
         let address = socket_address.ip().to_string();
+        let stream = Stream::new(stream, crypt_lib.clone()).await?;
+        debug!("Created new `Stream` from `TcpStream`.");
 
         connection_lock.push(address.clone());
-        stream_lock.insert(address, Stream::new(stream, crypt_lib.clone()).await?);
+        stream_lock.insert(address, stream);
+        debug!("Inserted new stream.");
 
         Ok(())
     }
@@ -186,17 +210,28 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         for (address, stream) in streams_lock.iter() {
             if let Some(addresses) = &addresses {
                 if !addresses.contains(address) {
+                    debug!("Skip sending on {}.", address);
                     continue;
                 };
             };
 
             let stream_rlock = stream.read().await;
-            if let Err(e) = stream_rlock.send(&bytes).await {
-                errors.push(e);
+            match stream_rlock.send(&bytes).await {
+                Ok(_) => debug!("Sent data to {}.", address),
+                Err(e) => {
+                    error!(
+                        "Got error while sending data to {}! Error: {}",
+                        stream_rlock.get_peer_ip().await,
+                        e
+                    );
+                    errors.push(e);
+                }
             };
         }
 
         if errors.is_empty() {
+            debug!("No errors while sending.");
+
             Ok(())
         } else {
             Err(errors)
@@ -210,12 +245,14 @@ impl<S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Send + 
         for (address, stream) in streams_lock.iter() {
             if let Some(addresses) = &addresses {
                 if !addresses.contains(address) {
+                    debug!("Skip receiving on {}.", address);
                     continue;
                 };
             };
 
             let stream_rlock = stream.read().await;
             packets.insert(address.clone(), stream_rlock.get_packets().await);
+            debug!("Received data from {}.", address);
         }
 
         packets
@@ -346,6 +383,8 @@ impl<'de, S: Serialize + for<'a> Deserialize<'a> + PacketTrait + std::marker::Se
 mod tests {
     use std::fmt::Display;
 
+    use log::debug;
+
     use super::*;
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -382,14 +421,16 @@ mod tests {
         let mut net_lib1 = NetLib::<CustomPacket>::new("localhost:8080", cryptlib::Bits::Bits2048)
             .await
             .unwrap();
-        // let mut net_lib2 = NetLib::<CustomPacket>::new("localhost:8090", cryptlib::Bits::Bits2048)
-        //     .await
-        //     .unwrap();
+        let mut net_lib2 = NetLib::<CustomPacket>::new("localhost:8090", cryptlib::Bits::Bits2048)
+            .await
+            .unwrap();
 
         net_lib1.open().await;
-        // net_lib2.open().await;
+        net_lib2.open().await;
 
-        // net_lib2.connect("localhost:8080").await.unwrap();
+        debug!("Before connect!");
+        net_lib2.connect("localhost:8080").await.unwrap();
+        debug!("Afer connect!");
 
         net_lib1
             .send(
@@ -403,22 +444,10 @@ mod tests {
 
         tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
 
-        // let packets = net_lib2.recv(None).await;
-
-        // for (_, packets) in packets.iter() {
-        //     for packet in packets {
-        //         let x: Box<Message> = packet
-        //             .packet_type
-        //             .to_struct(&packet.packet)
-        //             .unwrap()
-        //             .downcast()
-        //             .unwrap();
-        //         println!("Message: {}", x);
-        //     }
-        // }
+        let streams = net_lib1.streams.clone();
 
         net_lib1.close().await;
-        // net_lib2.close().await;
+        net_lib2.close().await;
 
         assert_eq!(true, true);
     }

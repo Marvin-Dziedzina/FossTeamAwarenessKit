@@ -141,7 +141,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 [[package]]
 name = "cryptlib"
 version = "0.1.0"
-source = "git+https://github.com/Marvin-Dziedzina/cryptlib#407f6956e2ea426b7d94a19cac095ccefc0553e5"
+source = "git+https://github.com/Marvin-Dziedzina/cryptlib#64198792aee5ddb4b47297059d5aa5f00e1a8bef"
 dependencies = [
  "openssl",
  "serde",
