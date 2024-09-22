@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData, net::SocketAddr, ops::Deref, sync::Arc};
 
 use cryptlib::CryptLib;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, trace};
 use serde::{
     de::{self, Visitor},
     ser::SerializeStruct,
