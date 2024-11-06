@@ -7,7 +7,6 @@ This application helps you and your team coordinate your operations and plans.
 The requirements for each part of this software are in the respective folders.
 
 ## Release Requirements
-- cryptography library ✅
-- networking library ❌
-- peer to peer client networking library ❌
+- simplified networking library ❌
+- peer to peer client networking server ❌
 - FOSSTAK application ❌
