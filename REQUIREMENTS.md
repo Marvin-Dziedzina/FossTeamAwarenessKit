@@ -2,7 +2,7 @@
 
 ## Stakeholders
 
-* People that need to coordinate some physical operation where it is necessary to know where your team is and to make live updates about occuring events or updates.
+People that need to coordinate some physical operation where it is necessary to know where your team is and to make live updates about occuring events or updates.
 
 ## General Requirements
 
