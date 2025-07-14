@@ -1,0 +1,5 @@
+[workspace]
+edition = "2024"
+members = ["client", "server", "common"]
+
+[workspace.dependencies]

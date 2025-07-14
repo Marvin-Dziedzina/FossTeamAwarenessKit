@@ -3,3 +3,6 @@
 
 # Rust specific
 target
+
+# Added by cargo
+/target

@@ -28,6 +28,8 @@ FOSSTAK is a open source map tool to coordinate operations and let your team kno
 
 * The application will provide the functionality to take or upload pictures and position them on to the map. The facing direction will be shown and saved. The pictures will have the same functionality as the base map so you can upload maps and house plans.
 
+* The application will provide a text chat.
+
 * The application will have two modes: the planner mode and the mission mode.
 
 #### Planner Mode
