@@ -6,13 +6,15 @@ People that need to coordinate some physical operation where it is necessary to 
 
 ## General Requirements
 
-The application is completely open source. The application will make planning and the execution of operations in the real world easier. The application can be connected to a server that can be hosted by yourself. The application will synchronise your added markings, your position and movement direction to the server. The application wont rely on online services like a map api, everything that is static will be downloadable.
-
-## Audience
-
-* Militaries
-* Mercenaries
-* every day people
+- Completely open source
+- Can be connected to a server
+- The server will receive all updates
+- The server will replicate all updates to all clients
+- The map data will be sourced from open street map
+- The clients position will be updated to the server
+- The client can place markers on the map. It will be updated to the server
+- The client can make photos and upload them to the map to the positon where they where made. It will be updated to the server
+- The photos will be displayed with the direction that they were made to
 
 ## Main Purpose
 
