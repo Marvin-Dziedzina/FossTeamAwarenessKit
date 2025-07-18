@@ -1,5 +1,9 @@
 [workspace]
 edition = "2024"
-members = ["client", "server", "common"]
+members = ["client_bevy", "server", "common", "core"]
+
+[workspace.package]
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+osm_overpass = "0.1.2"

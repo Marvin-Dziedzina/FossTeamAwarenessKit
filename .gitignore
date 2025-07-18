@@ -1,8 +1,5 @@
 # IDE specific
 .vscode
 
-# Rust specific
-target
-
 # Added by cargo
 /target
