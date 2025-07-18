@@ -1,6 +1,6 @@
 [workspace]
 edition = "2024"
-members = ["client_bevy", "server", "common", "core"]
+members = ["client", "server", "common", "core"]
 
 [workspace.package]
 license = "MIT OR Apache-2.0"
