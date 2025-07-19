@@ -4,4 +4,61 @@ version = "0.1.0"
 edition = "2024"
 license.workspace = true
 
+[lib]
+name = "android"
+crate-type = ["lib", "cdylib"]
+
 [dependencies]
+bevy = { version = "0.16.1", default-features = false, features = [
+    "android-native-activity",
+    "android_shared_stdcxx",
+    "multi_threaded",
+    "bevy_log",
+    "bevy_window",
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_audio",
+    "bevy_gizmos",
+    "bevy_state",
+    "bevy_color",
+    "bevy_render",
+    "bevy_scene",
+    "default_font",
+    "png",
+] }
+core = { path = "../core" }
+
+[features]
+dev_mode = ["bevy/bevy_dev_tools"]
+
+[package.metadata.android]
+package = "com.fosstak.android_client"
+apk_name = "FOSSTAK"
+assets = "./assets"
+resources = "./res"
+# This strips debug symbols from the shared libraries, drastically reducing APK size. If you need them, remove the option.
+strip = "strip"
+build_targets = [
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+]
+
+[package.metadata.android.sdk]
+target_sdk_version = 33
+
+[package.metadata.android.application]
+label = "FOSSTAK"
+icon = "@mipmap/ic_launcher"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["-Zunstable-options", "--cfg", "docsrs"]
+all-features = true
+
+[profile.dev.package."*"]
+opt-level = 3
